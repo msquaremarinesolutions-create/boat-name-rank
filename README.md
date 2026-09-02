@@ -2,7 +2,7 @@
 
 **How popular is your boat name?** A tiny, dependency-free web tool that checks any boat name against 234,468 currently documented US vessels — real US Coast Guard data.
 
-**Live:** https://msquaremarinesolutions-create.github.io/boat-name-rank/
+**Live:** https://names.msquaremarine.com
 
 Type a name, get its rank, how many boats share it, and how rare it is among all 135,377 documented boat names — then download a share card or copy a deep link (`?name=SERENITY`).
 
