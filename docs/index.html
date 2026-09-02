@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Boat Name Rank — how popular is your boat name?</title>
+<meta name="description" content="Check your boat name against 234,468 US-documented vessels. Real US Coast Guard data, updated from the official vessel documentation file.">
+<meta property="og:title" content="Boat Name Rank">
+<meta property="og:description" content="How popular is your boat name? Check it against 234,468 US-documented vessels.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#9875;</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Marcellus&family=Public+Sans:ital,wght@0,400;0,600;0,700;1,400&display=swap">
+<style>
+  :root {
+    --bg: #0e1b26;
+    --bg-soft: #14242f;
+    --card: #16283a;
+    --ink: #eef3f6;
+    --ink-soft: #a8bbc7;
+    --ink-faint: #6d8291;
+    --line: #24384a;
+    --accent: #57c4d4;
+    --accent-deep: #2a8fa1;
+    --gold: #d9b36c;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Public Sans", "Segoe UI", system-ui, sans-serif;
+    line-height: 1.6;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  main { flex: 1; width: 100%; max-width: 720px; margin: 0 auto; padding: 0 20px; }
+  header { text-align: center; padding: 64px 0 8px; }
+  .waves { color: var(--accent); font-size: 22px; letter-spacing: 6px; }
+  h1 {
+    font-family: "Marcellus", Georgia, serif;
+    font-weight: 400;
+    font-size: clamp(30px, 6vw, 44px);
+    line-height: 1.15;
+    margin: 10px 0 12px;
+  }
+  .sub { color: var(--ink-soft); font-size: 16px; max-width: 46ch; margin: 0 auto; }
+  .sub strong { color: var(--ink); }
+  form { display: flex; gap: 10px; margin: 32px 0 8px; }
+  input {
+    flex: 1;
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    color: var(--ink);
+    font: inherit;
+    font-size: 17px;
+    padding: 14px 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  input::placeholder { color: var(--ink-faint); text-transform: none; letter-spacing: 0; }
+  input:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+  button {
+    background: var(--accent);
+    border: none;
+    border-radius: 8px;
+    color: #06222b;
+    font: inherit;
+    font-size: 16px;
+    font-weight: 700;
+    padding: 14px 22px;
+    cursor: pointer;
+  }
+  button:hover { background: #6fd0de; }
+  button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .hint { color: var(--ink-faint); font-size: 13px; text-align: center; }
+  .hint a { color: var(--ink-faint); }
+  #result { margin: 36px 0 8px; display: none; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 36px 32px 28px;
+    text-align: center;
+  }
+  .card .label {
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+  }
+  .card .name {
+    font-family: "Marcellus", Georgia, serif;
+    font-size: clamp(30px, 7vw, 52px);
+    line-height: 1.1;
+    letter-spacing: 0.03em;
+    margin: 10px 0 6px;
+    overflow-wrap: anywhere;
+  }
+  .card .rule { width: 64px; height: 2px; background: var(--gold); margin: 14px auto 18px; border: none; }
+  .card .verdict { font-size: 19px; font-weight: 600; margin-bottom: 6px; }
+  .card .detail { color: var(--ink-soft); font-size: 15px; max-width: 48ch; margin: 0 auto; }
+  .card .src { color: var(--ink-faint); font-size: 11.5px; margin-top: 22px; }
+  .actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 16px; }
+  .actions button {
+    background: var(--bg-soft);
+    color: var(--ink);
+    border: 1px solid var(--line);
+    font-weight: 600;
+    font-size: 14px;
+    padding: 10px 16px;
+  }
+  .actions button:hover { border-color: var(--accent); background: var(--bg-soft); }
+  .cta { text-align: center; margin: 26px 0 0; font-size: 14.5px; color: var(--ink-soft); }
+  .cta a { color: var(--accent); font-weight: 600; text-decoration: none; }
+  .cta a:hover { text-decoration: underline; }
+  footer {
+    border-top: 1px solid var(--line);
+    margin-top: 56px;
+    padding: 22px 20px 30px;
+    text-align: center;
+    color: var(--ink-faint);
+    font-size: 13px;
+  }
+  footer a { color: var(--ink-soft); }
+  #status[role="status"] { min-height: 1.2em; }
+  @media (max-width: 520px) { form { flex-direction: column; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="waves" aria-hidden="true">~ ~ ~</div>
+    <h1>How popular is your boat name?</h1>
+    <p class="sub">Check it against <strong>234,468 documented US vessels</strong> — real US Coast Guard data, not a guess.</p>
+  </header>
+
+  <form id="form">
+    <input id="q" type="text" placeholder="Type a boat name — e.g. Serenity" autocomplete="off" autofocus aria-label="Boat name">
+    <button type="submit">Check</button>
+  </form>
+  <p class="hint">Try SERENITY, ANDIAMO, KNOT ON CALL — or the name on your own transom. <span id="status" role="status"></span></p>
+
+  <section id="result" aria-live="polite">
+    <div class="card" id="card">
+      <div class="label" id="r-label">Boat Name Rank</div>
+      <div class="name" id="r-name"></div>
+      <hr class="rule">
+      <div class="verdict" id="r-verdict"></div>
+      <p class="detail" id="r-detail"></p>
+      <div class="src">Data: US Coast Guard vessel documentation, Aug 2026 · boatnamerank</div>
+    </div>
+    <div class="actions">
+      <button id="btn-card" type="button">Download share card</button>
+      <button id="btn-link" type="button">Copy link</button>
+    </div>
+    <p class="cta" id="cta"></p>
+  </section>
+</main>
+
+<footer>
+  Built on the open <a href="https://github.com/msquaremarinesolutions-create/boat-names-dataset">boat-names-dataset</a> (public-domain USCG data)
+  · Made by <a href="https://www.msquaremarine.com">M2LETTERS</a> — 316L stainless steel boat lettering
+</footer>
+
+<canvas id="canvas" width="1200" height="630" hidden></canvas>
+
+<script>
+(function () {
+  "use strict";
+  var meta = null, shardCache = {}, current = null;
+  var $ = function (id) { return document.getElementById(id); };
+
+  function normalize(s) {
+    return s.toUpperCase().replace(/\s+/g, " ").trim();
+  }
+  function shardKey(name) {
+    return /^[A-Z]/.test(name[0]) ? name[0] : "0";
+  }
+  function fmt(n) { return n.toLocaleString("en-US"); }
+
+  function loadMeta() {
+    if (meta) return Promise.resolve(meta);
+    return fetch("data/meta.json").then(function (r) { return r.json(); }).then(function (m) { meta = m; return m; });
+  }
+  function loadShard(key) {
+    if (shardCache[key]) return Promise.resolve(shardCache[key]);
+    return fetch("data/shards/" + key + ".json")
+      .then(function (r) { return r.ok ? r.json() : {}; })
+      .then(function (s) { shardCache[key] = s; return s; });
+  }
+
+  // share of distinct names that have FEWER boats than `count`
+  function rarerThanPct(count) {
+    var below = 0, total = 0, c;
+    for (c in meta.hist) {
+      total += meta.hist[c];
+      if (+c < count) below += meta.hist[c];
+    }
+    return 100 * below / total;
+  }
+
+  function verdictFor(name, entry) {
+    if (!entry) {
+      return {
+        verdict: "One of a kind — for now.",
+        detail: "Not one of " + fmt(meta.boats) + " documented US vessels carries this name. It’s all yours.",
+        cardLine: "0 documented US vessels carry this name",
+      };
+    }
+    var count = entry[0], rank = entry[1];
+    if (rank <= 100) {
+      return {
+        verdict: "#" + rank + " most popular boat name in America",
+        detail: fmt(count) + " documented vessels share this name. You’re in very good company — or very common company, depending on how you look at it.",
+        cardLine: "#" + rank + " of America’s boat names · " + fmt(count) + " vessels",
+      };
+    }
+    if (count === 1) {
+      return {
+        verdict: "One of one.",
+        detail: "Exactly one documented US vessel carries this name — rarer than " + rarerThanPct(1).toFixed(1) + "% of all " + fmt(meta.uniqueNames) + " boat names.",
+        cardLine: "The only documented US vessel with this name",
+      };
+    }
+    return {
+      verdict: fmt(count) + " boats share this name",
+      detail: "Rarer than " + rarerThanPct(count).toFixed(1) + "% of all " + fmt(meta.uniqueNames) + " documented boat names in the United States.",
+      cardLine: fmt(count) + " documented US vessels · rarer than " + rarerThanPct(count).toFixed(0) + "% of names",
+    };
+  }
+
+  function show(name, entry) {
+    var v = verdictFor(name, entry);
+    current = { name: name, v: v };
+    $("r-name").textContent = name;
+    $("r-verdict").textContent = v.verdict;
+    $("r-detail").textContent = v.detail;
+    $("cta").innerHTML = "See “" + name.replace(/[<>&]/g, "") + "” in laser-cut 316L stainless steel → <a href=\"https://www.msquaremarine.com\" rel=\"noopener\">msquaremarine.com</a>";
+    $("result").style.display = "block";
+    $("status").textContent = "";
+    var u = new URL(location.href);
+    u.searchParams.set("name", name);
+    history.replaceState(null, "", u);
+  }
+
+  function lookup(raw) {
+    var name = normalize(raw);
+    if (!name) return;
+    $("status").textContent = "Checking…";
+    loadMeta()
+      .then(function () { return loadShard(shardKey(name)); })
+      .then(function (shard) { show(name, shard[name] || null); })
+      .catch(function () { $("status").textContent = "Could not load data — please try again."; });
+  }
+
+  $("form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    lookup($("q").value);
+  });
+
+  // ---- share card (canvas PNG) ----
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+  function fitFont(ctx, text, family, maxW, startPx) {
+    var px = startPx;
+    do {
+      ctx.font = px + "px " + family;
+      if (ctx.measureText(text).width <= maxW) break;
+      px -= 4;
+    } while (px > 28);
+    return px;
+  }
+  function drawCard() {
+    var c = $("canvas"), ctx = c.getContext("2d");
+    var W = c.width, H = c.height;
+    ctx.fillStyle = "#0e1b26";
+    ctx.fillRect(0, 0, W, H);
+    ctx.strokeStyle = "#24384a";
+    ctx.lineWidth = 2;
+    roundRect(ctx, 30, 30, W - 60, H - 60, 18);
+    ctx.stroke();
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#57c4d4";
+    ctx.font = "600 24px 'Public Sans', sans-serif";
+    ctx.fillText("B O A T   N A M E   R A N K", W / 2, 120);
+    ctx.fillStyle = "#eef3f6";
+    var px = fitFont(ctx, current.name, "'Marcellus', Georgia, serif", W - 180, 110);
+    ctx.font = px + "px 'Marcellus', Georgia, serif";
+    ctx.fillText(current.name, W / 2, 280);
+    ctx.fillStyle = "#d9b36c";
+    ctx.fillRect(W / 2 - 50, 320, 100, 4);
+    ctx.fillStyle = "#eef3f6";
+    ctx.font = "600 40px 'Public Sans', sans-serif";
+    ctx.fillText(current.v.verdict, W / 2, 400);
+    ctx.fillStyle = "#a8bbc7";
+    ctx.font = "26px 'Public Sans', sans-serif";
+    ctx.fillText(current.v.cardLine, W / 2, 448);
+    ctx.fillStyle = "#6d8291";
+    ctx.font = "20px 'Public Sans', sans-serif";
+    ctx.fillText("Check yours → " + location.host + location.pathname, W / 2, 540);
+    ctx.fillText("US Coast Guard data · by M2LETTERS · msquaremarine.com", W / 2, 572);
+  }
+  $("btn-card").addEventListener("click", function () {
+    if (!current) return;
+    document.fonts.load("80px Marcellus").then(function () {
+      drawCard();
+      var a = document.createElement("a");
+      a.download = "boat-name-rank-" + current.name.toLowerCase().replace(/[^a-z0-9]+/g, "-") + ".png";
+      a.href = $("canvas").toDataURL("image/png");
+      a.click();
+    });
+  });
+  $("btn-link").addEventListener("click", function () {
+    if (!current) return;
+    var u = new URL(location.href);
+    u.searchParams.set("name", current.name);
+    navigator.clipboard.writeText(u.toString()).then(function () {
+      $("btn-link").textContent = "Link copied!";
+      setTimeout(function () { $("btn-link").textContent = "Copy link"; }, 1600);
+    });
+  });
+
+  // deep link ?name=
+  var q = new URL(location.href).searchParams.get("name");
+  if (q) { $("q").value = q; lookup(q); }
+})();
+</script>
+</body>
+</html>
