@@ -58,6 +58,7 @@ const ORG = {
   sameAs: [
     "https://github.com/msquaremarinesolutions-create",
     "https://www.reddit.com/user/MSquareMarine/",
+    "https://www.etsy.com/shop/MSquareMarine",
   ],
 };
 const ORG_REF = { "@id": ORG["@id"] };
