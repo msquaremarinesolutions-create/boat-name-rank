@@ -60,6 +60,7 @@ const ORG = {
     "https://www.reddit.com/user/MSquareMarine/",
     "https://www.etsy.com/shop/MSquareMarine",
     "https://www.facebook.com/profile.php?id=61594664475157",
+    "https://www.pinterest.com/MSquareMarine/",
   ],
 };
 const ORG_REF = { "@id": ORG["@id"] };
