@@ -26,6 +26,6 @@ Code: [MIT](LICENSE). Underlying vessel data: US federal government work, public
 
 ---
 
-Made by [M. Square Marine](https://www.msquaremarine.com) — we hand-polish and laser-cut 316L stainless steel boat lettering, so we care about boat names professionally.
+Made by [M.Square Marine](https://www.msquaremarine.com) — we hand-polish and laser-cut 316L stainless steel boat lettering, so we care about boat names professionally.
 
 Other free tools of ours: [boat lettering size calculator](https://size.msquaremarine.com) · [transom mockup](https://mockup.msquaremarine.com) · [the dataset behind this](https://github.com/msquaremarinesolutions-create/boat-names-dataset)
