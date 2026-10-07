@@ -44,8 +44,39 @@ const fmt = (n) => n.toLocaleString("en-US");
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 const titleCase = (s) => s.toLowerCase().replace(/\b[a-z]/g, (c) => c.toUpperCase()).replace(/\bSt\b/g, "St.");
 
+// ---------- structured data shared by every page ----------
+// The same @id is used on every tool page, so search engines and AI systems
+// resolve all of them to one organisation.
+const ORG = {
+  "@type": "Organization",
+  "@id": "https://www.msquaremarine.com/#organization",
+  name: "M.Square Marine",
+  legalName: "M.Square Marine LLC",
+  url: "https://www.msquaremarine.com",
+  logo: "https://cdn.shopify.com/s/files/1/0946/5747/8974/files/M2_logo2.png?v=1754525013",
+  email: "ahoy@msquaremarine.com",
+  sameAs: [
+    "https://github.com/msquaremarinesolutions-create",
+    "https://www.reddit.com/user/MSquareMarine/",
+  ],
+};
+const ORG_REF = { "@id": ORG["@id"] };
+
+function breadcrumbs(items) {
+  return {
+    "@type": "BreadcrumbList",
+    itemListElement: items.map(([name, url], i) => ({ "@type": "ListItem", position: i + 1, name, item: url })),
+  };
+}
+
+// JSON-LD is embedded in a <script>; "<" is escaped so no value can close the tag early.
+function jsonLd(graph) {
+  const json = JSON.stringify({ "@context": "https://schema.org", "@graph": graph }).replace(/</g, "\\u003c");
+  return `<script type="application/ld+json">${json}</script>`;
+}
+
 // ---------- shared page shell (same look as the rank checker) ----------
-function shell({ title, description, canonical, body }) {
+function shell({ title, description, canonical, body, graph = [] }) {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -56,6 +87,10 @@ function shell({ title, description, canonical, body }) {
 <link rel="canonical" href="${canonical}">
 <meta property="og:title" content="${esc(title)}">
 <meta property="og:description" content="${esc(description)}">
+<meta property="og:url" content="${canonical}">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="M.Square Marine">
+${jsonLd([ORG, ...graph])}
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='14' fill='%231a1917'/><text x='50' y='68' font-size='52' font-family='Arial' font-weight='bold' fill='white' text-anchor='middle'>M²</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -107,7 +142,7 @@ function shell({ title, description, canonical, body }) {
 ${body}
 </main>
 <footer>
-  Data: US Coast Guard vessel documentation, Aug 2026 — open on <a href="https://github.com/msquaremarinesolutions-create/boat-names-dataset">GitHub</a>
+  Data: US Coast Guard vessel documentation, Aug 2026 — <a href="../dataset/">about the dataset</a> · open on <a href="https://github.com/msquaremarinesolutions-create/boat-names-dataset">GitHub</a>
   · Made by <a href="https://www.msquaremarine.com">M.Square Marine</a> — 316L stainless steel boat lettering
   · <a href="https://size.msquaremarine.com">Size calculator</a> · <a href="https://mockup.msquaremarine.com">Transom mockup</a>
 </footer>
@@ -183,7 +218,13 @@ ${otherLinks}
 
 <p class="method">Counts cover vessels with a valid US Coast Guard Certificate of Documentation whose hailing port is in ${esc(name)}, as of August 2026. Documentation is required for commercial vessels of 5+ net tons and optional for recreational boats of that size, so small state-registered boats are not included. Names are compared exactly as documented, uppercased.</p>
 `;
-  return shell({ title, description, canonical: `${SITE}/states/${code.toLowerCase()}.html`, body });
+  const url = `${SITE}/states/${code.toLowerCase()}.html`;
+  const graph = [
+    breadcrumbs([["Boat Name Rank", `${SITE}/`], ["By state", `${SITE}/states/`], [name, url]]),
+    { "@type": "WebPage", "@id": url, url, name: title, description, publisher: ORG_REF,
+      isBasedOn: { "@id": `${SITE}/dataset/#dataset` } },
+  ];
+  return shell({ title, description, canonical: url, body, graph });
 }
 
 function indexPage(allStates, nationalTotal) {
@@ -204,16 +245,118 @@ ${links}
 </div>
 <p class="method">Counts cover vessels with a valid Certificate of Documentation, grouped by the hailing-port state on the transom, as of August 2026.</p>
 `;
-  return shell({ title, description, canonical: `${SITE}/states/`, body });
+  const graph = [
+    breadcrumbs([["Boat Name Rank", `${SITE}/`], ["By state", `${SITE}/states/`]]),
+    { "@type": "CollectionPage", "@id": `${SITE}/states/`, url: `${SITE}/states/`, name: title, description, publisher: ORG_REF },
+  ];
+  return shell({ title, description, canonical: `${SITE}/states/`, body, graph });
+}
+
+// ---------- dataset landing page (on our own domain, for Google Dataset Search) ----------
+function datasetPage(nationalTotal, totalRecords) {
+  const REPO = "https://github.com/msquaremarinesolutions-create/boat-names-dataset";
+  const RAW = "https://raw.githubusercontent.com/msquaremarinesolutions-create/boat-names-dataset/main";
+  const USCG = "https://www.dco.uscg.mil/Our-Organization/Assistant-Commandant-for-Prevention-Policy-CG-5P/Inspections-Compliance-CG-5PC-/Office-of-Investigations-Casualty-Analysis/Merchant-Vessels-of-the-United-States/";
+  const url = `${SITE}/dataset/`;
+  const title = "US Boat Names Dataset — 395,728 Coast Guard-Documented Vessels";
+  const description = `Every boat name in America: ${fmt(totalRecords)} US Coast Guard-documented vessels cleaned into an analysis-ready CSV, with rankings by decade, boat size and state. Public-domain data, free to use.`;
+  const chart = (file, alt) => `<picture><source media="(prefers-color-scheme: dark)" srcset="charts/${file}-dark.svg"><img src="charts/${file}-light.svg" alt="${esc(alt)}" style="width:100%;height:auto;border-radius:12px;margin:14px 0 4px" loading="lazy"></picture>`;
+
+  const body = `
+<nav class="crumbs"><a href="../">Boat Name Rank</a> › Dataset</nav>
+<header>
+  <div class="eyebrow">Open data</div>
+  <h1>Every boat name in America</h1>
+  <p class="lede"><strong>${fmt(totalRecords)} US Coast Guard-documented vessels</strong>, cleaned into one analysis-ready CSV. Free to use — the source is US federal government data in the public domain.</p>
+</header>
+
+<div class="stats">
+  <div class="stat"><div class="k">Vessel records</div><div class="v">${fmt(totalRecords)}</div></div>
+  <div class="stat"><div class="k">Currently documented</div><div class="v">${fmt(nationalTotal)}</div></div>
+  <div class="stat"><div class="k">Data as of</div><div class="v">Aug 2026</div></div>
+</div>
+
+<div class="cta">
+  <strong>Download:</strong> <a href="${RAW}/data/vessels.csv">vessels.csv</a> (35 MB) ·
+  <a href="${REPO}/tree/main/data/aggregates">ranked tables</a> ·
+  <a href="${REPO}">full repository, code and methodology</a>
+</div>
+
+<h2>SERENITY is America's most popular boat name</h2>
+<p class="lede">361 currently documented vessels carry it, ahead of FREEDOM (342) and ANDIAMO (297).</p>
+${chart("top-names", "Bar chart of the 15 most popular US boat names, led by SERENITY (361), FREEDOM (342) and ANDIAMO (297)")}
+
+<h2>ANDIAMO is the boat name of the 2020s</h2>
+<p class="lede">Among boats built since 2020, ANDIAMO (61) has overtaken the classics — and pun names are taking over: KNOT ON CALL, LIQUID ASSET, WHY KNOT and KNOT WORKING all sit in the 2020s top ten.</p>
+${chart("trend", "Line chart of boats built per decade carrying the five all-time top names; ANDIAMO leads the 2020s")}
+
+<h2>The bigger the boat, the shorter the name</h2>
+<p class="lede">Vessels of 79 ft and up average 8.8 characters, and only 10.6% of their names run longer than 12 characters — against roughly 20% everywhere else.</p>
+${chart("name-length", "Bar chart of the share of boat names longer than 12 characters by boat length; it drops to 10.6 percent for boats of 79 ft and up")}
+
+<h2>Explore it</h2>
+<div class="grid">
+  <a href="../">Check any boat name<span>→</span></a>
+  <a href="../states/">Top names by state<span>→</span></a>
+  <a href="${REPO}">Code &amp; methodology<span>→</span></a>
+</div>
+
+<h2>Columns</h2>
+<table>
+  <thead><tr><th>Column</th><th>Description</th></tr></thead>
+  <tbody>
+<tr><td>vessel_name</td><td>uppercased, whitespace-normalised</td></tr>
+<tr><td>official_number</td><td>USCG official number</td></tr>
+<tr><td>length_ft</td><td>registered length in feet</td></tr>
+<tr><td>build_year</td><td>year of completion</td></tr>
+<tr><td>hailing_port, hailing_port_state</td><td>the port shown on the stern</td></tr>
+<tr><td>service</td><td>e.g. Recreational, Commercial Fishing Vessel</td></tr>
+<tr><td>recreational</td><td>1 if the Recreation endorsement or service applies</td></tr>
+<tr><td>hull_material</td><td>e.g. FRP (Fiberglass), Steel, Wood, Aluminum</td></tr>
+<tr><td>cod_status</td><td>Certificate of Documentation status</td></tr>
+  </tbody>
+</table>
+
+<p class="method">Source: <a href="${USCG}">US Coast Guard, <em>Merchant Vessels of the United States</em></a>, release of August 2026 (data as of 2026-08-05), retrieved 2026-08-31. Rankings count the ${fmt(nationalTotal)} vessels with a valid Certificate of Documentation. Owner and personal information is not included. Documentation is required for commercial vessels of 5+ net tons and optional for recreational boats of that size, so small state-registered boats are not covered. Please cite as: M.Square Marine, <em>boat-names-dataset</em> (2026), based on US Coast Guard data.</p>
+`;
+
+  const graph = [
+    breadcrumbs([["Boat Name Rank", `${SITE}/`], ["Dataset", url]]),
+    {
+      "@type": "Dataset",
+      "@id": `${url}#dataset`,
+      name: "US documented vessel names (US Coast Guard, August 2026)",
+      alternateName: "boat-names-dataset",
+      description: `Names and particulars of ${fmt(totalRecords)} vessels documented by the US Coast Guard, from the public-domain "Merchant Vessels of the United States" file (August 2026 release). Cleaned into an analysis-ready CSV with ranked tables by decade, boat length and state. Owner and personal information is excluded.`,
+      url,
+      sameAs: REPO,
+      keywords: ["boat names", "vessel names", "US Coast Guard", "USCG", "documented vessels", "boating", "maritime", "open data"],
+      license: "https://creativecommons.org/publicdomain/mark/1.0/",
+      isAccessibleForFree: true,
+      creator: ORG_REF,
+      publisher: ORG_REF,
+      datePublished: "2026-08-31",
+      dateModified: "2026-08-31",
+      temporalCoverage: "2026-08-05",
+      spatialCoverage: { "@type": "Place", name: "United States" },
+      isBasedOn: USCG,
+      variableMeasured: ["vessel_name", "official_number", "length_ft", "build_year", "hailing_port", "hailing_port_state", "service", "recreational", "hull_material", "cod_status"],
+      distribution: [
+        { "@type": "DataDownload", encodingFormat: "text/csv", contentUrl: `${RAW}/data/vessels.csv` },
+      ],
+    },
+  ];
+  return shell({ title, description, canonical: url, body, graph });
 }
 
 async function main() {
   const byState = new Map();
-  let header = true, nationalTotal = 0;
+  let header = true, nationalTotal = 0, totalRecords = 0;
   const rl = readline.createInterface({ input: fs.createReadStream(input, { encoding: "utf8" }), crlfDelay: Infinity });
   for await (const line of rl) {
     if (header) { header = false; continue; }
     if (!line.trim()) continue;
+    totalRecords++;
     const f = parseLine(line);
     if (f[9] !== "Valid") continue;
     nationalTotal++;
@@ -238,6 +381,16 @@ async function main() {
     urls.push(`${SITE}/states/${code.toLowerCase()}.html`);
   }
   fs.writeFileSync(path.join(OUT, "index.html"), indexPage(allStates, nationalTotal));
+
+  // dataset landing page + its charts (copied from the dataset repo)
+  const DS = path.join(OUT, "..", "dataset");
+  fs.mkdirSync(path.join(DS, "charts"), { recursive: true });
+  const chartSrc = path.join(path.dirname(input), "..", "charts");
+  for (const f of fs.readdirSync(chartSrc).filter((f) => f.endsWith(".svg"))) {
+    fs.copyFileSync(path.join(chartSrc, f), path.join(DS, "charts", f));
+  }
+  fs.writeFileSync(path.join(DS, "index.html"), datasetPage(nationalTotal, totalRecords));
+  urls.push(`${SITE}/dataset/`);
 
   const today = new Date().toISOString().slice(0, 10);
   fs.writeFileSync(path.join(OUT, "..", "sitemap.xml"),

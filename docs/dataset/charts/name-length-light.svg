@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="322" viewBox="0 0 880 322">
+<rect width="880" height="322" fill="#fcfcfb" rx="8"/>
+<text x="24" y="34" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="17" font-weight="600" fill="#0b0b0b">The bigger the boat, the shorter the name</text>
+<text x="24" y="54" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="12.5" fill="#52514e">Share of vessel names longer than 12 characters, by boat length</text>
+<line x1="190" y1="70" x2="190" y2="282" stroke="#c3c2b7" stroke-width="1"/>
+<line x1="312" y1="70" x2="312" y2="282" stroke="#e1e0d9" stroke-width="1"/>
+<text x="312" y="296" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="10.5" fill="#898781" text-anchor="middle">5%</text><line x1="434" y1="70" x2="434" y2="282" stroke="#e1e0d9" stroke-width="1"/>
+<text x="434" y="296" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="10.5" fill="#898781" text-anchor="middle">10%</text><line x1="556" y1="70" x2="556" y2="282" stroke="#e1e0d9" stroke-width="1"/>
+<text x="556" y="296" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="10.5" fill="#898781" text-anchor="middle">15%</text><line x1="678" y1="70" x2="678" y2="282" stroke="#e1e0d9" stroke-width="1"/>
+<text x="678" y="296" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="10.5" fill="#898781" text-anchor="middle">20%</text><line x1="800" y1="70" x2="800" y2="282" stroke="#e1e0d9" stroke-width="1"/>
+<text x="800" y="296" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="10.5" fill="#898781" text-anchor="middle">25%</text><text x="180" y="95" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="12" fill="#52514e" text-anchor="end">under 26 ft (8 m)</text>
+<path d="M190,78 h508.4 a4,4 0 0 1 4,4 v18 a4,4 0 0 1 -4,4 h-508.4 z" fill="#2a78d6"/>
+<text x="710.4" y="95" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="12" font-weight="600" fill="#0b0b0b">21.0%</text><text x="180" y="135" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="12" fill="#52514e" text-anchor="end">26-40 ft (8-12 m)</text>
+<path d="M190,118 h496.2 a4,4 0 0 1 4,4 v18 a4,4 0 0 1 -4,4 h-496.2 z" fill="#2a78d6"/>
+<text x="698.2" y="135" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="12" font-weight="600" fill="#0b0b0b">20.5%</text><text x="180" y="175" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="12" fill="#52514e" text-anchor="end">40-50 ft (12-15 m)</text>
+<path d="M190,158 h466.92 a4,4 0 0 1 4,4 v18 a4,4 0 0 1 -4,4 h-466.92 z" fill="#2a78d6"/>
+<text x="668.9200000000001" y="175" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="12" font-weight="600" fill="#0b0b0b">19.3%</text><text x="180" y="215" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="12" fill="#52514e" text-anchor="end">50-79 ft (15-24 m)</text>
+<path d="M190,198 h537.6800000000001 a4,4 0 0 1 4,4 v18 a4,4 0 0 1 -4,4 h-537.6800000000001 z" fill="#2a78d6"/>
+<text x="739.6800000000001" y="215" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="12" font-weight="600" fill="#0b0b0b">22.2%</text><text x="180" y="255" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="12" fill="#52514e" text-anchor="end">79 ft and up (24 m+)</text>
+<path d="M190,238 h254.64 a4,4 0 0 1 4,4 v18 a4,4 0 0 1 -4,4 h-254.64 z" fill="#2a78d6"/>
+<text x="456.64" y="255" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="12" font-weight="600" fill="#0b0b0b">10.6%</text>
+<text x="24" y="312" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="10.5" fill="#898781">Source: USCG Merchant Vessels of the United States, Aug 2026 - vessels with a valid Certificate of Documentation</text>
+</svg>
