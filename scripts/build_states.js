@@ -297,9 +297,8 @@ ${chart("top-names", "Bar chart of the 15 most popular US boat names, led by SER
 <p class="lede">Among boats built since 2020, ANDIAMO (61) has overtaken the classics — and pun names are taking over: KNOT ON CALL, LIQUID ASSET, WHY KNOT and KNOT WORKING all sit in the 2020s top ten.</p>
 ${chart("trend", "Line chart of boats built per decade carrying the five all-time top names; ANDIAMO leads the 2020s")}
 
-<h2>The bigger the boat, the shorter the name</h2>
-<p class="lede">Vessels of 79 ft and up average 8.8 characters, and only 10.6% of their names run longer than 12 characters — against roughly 20% everywhere else.</p>
-${chart("name-length", "Bar chart of the share of boat names longer than 12 characters by boat length; it drops to 10.6 percent for boats of 79 ft and up")}
+<h2>Name length does not depend on boat size</h2>
+<p class="lede">Among recreational boats, names average about 10 characters in every size class, from under 26 ft to 79 ft and up. An earlier version of this page claimed bigger boats carry shorter names; that effect came from commercial barges and tugs, not yachts, and has been corrected.</p>
 
 <h2>Explore it</h2>
 <div class="grid">
