@@ -144,7 +144,7 @@
   </header>
 
   <form id="form">
-    <input id="q" type="text" placeholder="Type a boat name — e.g. Serenity" autocomplete="off" autofocus aria-label="Boat name">
+    <input id="q" type="text" maxlength="40" placeholder="Type a boat name — e.g. Serenity" autocomplete="off" autofocus aria-label="Boat name">
     <button type="submit">Check</button>
   </form>
   <p class="hint">Try SERENITY, ANDIAMO, KNOT ON CALL — or the name on your own transom. <span id="status" role="status"></span></p>
@@ -182,11 +182,20 @@
 <script>
 (function () {
   "use strict";
-  var meta = null, shardCache = {}, current = null;
+  var meta = null, shardCache = {}, current = null, reqId = 0;
   var $ = function (id) { return document.getElementById(id); };
+  var MAXLEN = 40;   // the USCG name field holds 33 characters
 
+  // Match what keyboards produce to how names are stored in the data:
+  // composed accents, straight apostrophes, no zero-width characters.
   function normalize(s) {
-    return s.toUpperCase().replace(/\s+/g, " ").trim();
+    return s.normalize("NFC")
+      .replace(/[‘’ʼ`´]/g, "'")
+      .replace(/[​-‍﻿]/g, "")
+      .toUpperCase().replace(/\s+/g, " ").trim().slice(0, MAXLEN);
+  }
+  function escHtml(s) {
+    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
   function shardKey(name) {
     return /^[A-Z]/.test(name[0]) ? name[0] : "0";
@@ -200,19 +209,24 @@
   function loadShard(key) {
     if (shardCache[key]) return Promise.resolve(shardCache[key]);
     return fetch("data/shards/" + key + ".json")
-      .then(function (r) { return r.ok ? r.json() : {}; })
+      .then(function (r) {
+        // a failed request must never be read as "nobody has this name"
+        if (!r.ok) throw new Error("shard " + key + ": HTTP " + r.status);
+        return r.json();
+      })
       .then(function (s) { shardCache[key] = s; return s; });
   }
 
-  // share of distinct names that have FEWER boats than `count`
-  function rarerThanPct(count) {
-    var below = 0, total = 0, c;
+  // share (in %) of all distinct names carried by at least `count` boats
+  function pctAtLeast(count) {
+    var hit = 0, total = 0, c;
     for (c in meta.hist) {
       total += meta.hist[c];
-      if (+c < count) below += meta.hist[c];
+      if (+c >= count) hit += meta.hist[c];
     }
-    return 100 * below / total;
+    return 100 * hit / total;
   }
+  function pctStr(p) { return p < 0.1 ? "less than 0.1" : p.toFixed(1); }
 
   function verdictFor(name, entry) {
     if (!entry) {
@@ -222,25 +236,30 @@
         cardLine: "0 documented US vessels carry this name",
       };
     }
+    // rank = 1 + number of names carried by more boats; tied names share it
     var count = entry[0], rank = entry[1];
+    var tied = (meta.hist[count] || 1) > 1;
     if (rank <= 100) {
+      var place = (tied ? "Tied for #" : "#") + rank;
       return {
-        verdict: "#" + rank + " most popular boat name in America",
+        verdict: place + " most popular boat name in America",
         detail: fmt(count) + " documented vessels share this name. You’re in very good company — or very common company, depending on how you look at it.",
-        cardLine: "#" + rank + " of America’s boat names · " + fmt(count) + " vessels",
+        cardLine: place + " of America’s boat names · " + fmt(count) + " vessels",
       };
     }
     if (count === 1) {
+      var single = 100 * meta.hist[1] / meta.uniqueNames;
       return {
         verdict: "One of one.",
-        detail: "Exactly one documented US vessel carries this name — rarer than " + rarerThanPct(1).toFixed(1) + "% of all " + fmt(meta.uniqueNames) + " boat names.",
+        detail: "Exactly one documented US vessel carries this name. Most names are like that — " + single.toFixed(0) + "% of all " + fmt(meta.uniqueNames) + " documented boat names belong to a single boat.",
         cardLine: "The only documented US vessel with this name",
       };
     }
+    var top = pctStr(pctAtLeast(count));
     return {
       verdict: fmt(count) + " boats share this name",
-      detail: "Rarer than " + rarerThanPct(count).toFixed(1) + "% of all " + fmt(meta.uniqueNames) + " documented boat names in the United States.",
-      cardLine: fmt(count) + " documented US vessels · rarer than " + rarerThanPct(count).toFixed(0) + "% of names",
+      detail: "Only " + top + "% of all " + fmt(meta.uniqueNames) + " documented boat names in the United States are this common — most names belong to a single boat.",
+      cardLine: fmt(count) + " documented US vessels · among the top " + top + "% most common names",
     };
   }
 
@@ -250,7 +269,7 @@
     $("r-name").textContent = name;
     $("r-verdict").textContent = v.verdict;
     $("r-detail").textContent = v.detail;
-    $("cta").innerHTML = "See “" + name.replace(/[<>&]/g, "") + "” in laser-cut 316L stainless steel → <a href=\"https://www.msquaremarine.com\" rel=\"noopener\">msquaremarine.com</a>";
+    $("cta").innerHTML = "See “" + escHtml(name) + "” in laser-cut 316L stainless steel → <a href=\"https://www.msquaremarine.com\" rel=\"noopener\">msquaremarine.com</a>";
     $("result").style.display = "block";
     $("status").textContent = "";
     var u = new URL(location.href);
@@ -261,11 +280,19 @@
   function lookup(raw) {
     var name = normalize(raw);
     if (!name) return;
+    var my = ++reqId;   // only the latest lookup may update the page
     $("status").textContent = "Checking…";
     loadMeta()
       .then(function () { return loadShard(shardKey(name)); })
-      .then(function (shard) { show(name, shard[name] || null); })
-      .catch(function () { $("status").textContent = "Could not load data — please try again."; });
+      .then(function (shard) {
+        if (my !== reqId) return;
+        show(name, Object.prototype.hasOwnProperty.call(shard, name) ? shard[name] : null);
+      })
+      .catch(function () {
+        if (my !== reqId) return;
+        $("result").style.display = "none";   // never leave an older answer next to the error
+        $("status").textContent = "Could not load data — please try again.";
+      });
   }
 
   $("form").addEventListener("submit", function (e) {
@@ -312,7 +339,8 @@
     ctx.fillStyle = "#14456b";
     ctx.fillRect(W / 2 - 50, 320, 100, 5);
     ctx.fillStyle = "#1a1917";
-    ctx.font = "600 40px 'Jost', sans-serif";
+    var vpx = fitFont(ctx, current.v.verdict, "600", "'Jost', sans-serif", W - 140, 40);
+    ctx.font = "600 " + vpx + "px 'Jost', sans-serif";
     ctx.fillText(current.v.verdict, W / 2, 402);
     ctx.fillStyle = "#5b564d";
     ctx.font = "26px 'Bitter', serif";
@@ -339,10 +367,14 @@
     if (!current) return;
     var u = new URL(location.href);
     u.searchParams.set("name", current.name);
-    navigator.clipboard.writeText(u.toString()).then(function () {
-      $("btn-link").textContent = "Link copied!";
-      setTimeout(function () { $("btn-link").textContent = "Copy link"; }, 1600);
-    });
+    var flash = function (t) {
+      $("btn-link").textContent = t;
+      setTimeout(function () { $("btn-link").textContent = "Copy link"; }, 1800);
+    };
+    if (!navigator.clipboard) { flash("Copy the address bar instead"); return; }
+    navigator.clipboard.writeText(u.toString())
+      .then(function () { flash("Link copied!"); })
+      .catch(function () { flash("Copy the address bar instead"); });
   });
 
   // deep link ?name=

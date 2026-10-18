@@ -6,8 +6,9 @@
  * Usage: node scripts/build_data.js [path-to-vessels.csv]
  *
  * Output: docs/data/meta.json and docs/data/shards/<A-Z|0>.json
- * Each shard maps NAME -> [boatCount, rank]. Ranks are dense (ties share a
- * rank) over all names of currently documented (Valid COD) vessels.
+ * Each shard maps NAME -> [boatCount, rank]. Ranks are competition ranks
+ * (1 + names with more boats; ties share a rank) over all names of currently
+ * documented (Valid COD) vessels.
  */
 const fs = require("fs");
 const path = require("path");
@@ -49,16 +50,18 @@ async function main() {
     counts.set(name, (counts.get(name) || 0) + 1);
   }
 
-  // dense ranks by count
+  // competition ranks ("1224"): rank = 1 + number of names carried by more
+  // boats, so tied names share a rank and the next rank skips accordingly.
+  // A dense rank would let far more names claim a "top 100" place.
   const sorted = [...counts.entries()].sort((a, b) => b[1] - a[1]);
   let rank = 0, lastCount = Infinity;
   const shards = new Map();
-  for (const [name, count] of sorted) {
-    if (count < lastCount) { rank++; lastCount = count; }
+  sorted.forEach(([name, count], i) => {
+    if (count < lastCount) { rank = i + 1; lastCount = count; }
     const key = /^[A-Z]/.test(name[0]) ? name[0] : "0";
     if (!shards.has(key)) shards.set(key, {});
     shards.get(key)[name] = [count, rank];
-  }
+  });
 
   fs.mkdirSync(path.join(OUT, "shards"), { recursive: true });
   let totalBytes = 0;

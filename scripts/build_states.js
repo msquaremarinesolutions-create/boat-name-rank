@@ -165,8 +165,12 @@ function statePage(code, s, allStates) {
   const ports = top(s.ports, 5);
   const others = allStates.filter((x) => x.code !== code).slice(0, 12);
 
-  const rows = topNames.map(([n, c], i) =>
-    `<tr><td class="rank">${i + 1}</td><td>${nameLink(n)}</td><td class="n">${fmt(c)}</td></tr>`).join("\n");
+  // competition rank, same rule as the checker: tied names share a place
+  let place = 0, last = Infinity;
+  const rows = topNames.map(([n, c], i) => {
+    if (c < last) { place = i + 1; last = c; }
+    return `<tr><td class="rank">${place}</td><td>${nameLink(n)}</td><td class="n">${fmt(c)}</td></tr>`;
+  }).join("\n");
   const portRows = ports.map(([p, c]) =>
     `<tr><td>${esc(titleCase(p))}</td><td class="n">${fmt(c)}</td></tr>`).join("\n");
   const otherLinks = others.map((x) =>
@@ -217,7 +221,7 @@ ${portRows}
 <div class="grid">
 ${otherLinks}
 </div>
-<p style="margin-top:12px;font-family:'Jost',sans-serif;font-size:14px"><a href="index.html" style="color:var(--accent)">All 51 states and D.C. →</a></p>
+<p style="margin-top:12px;font-family:'Jost',sans-serif;font-size:14px"><a href="index.html" style="color:var(--accent)">All 50 states and D.C. →</a></p>
 
 <p class="method">Counts cover vessels with a valid US Coast Guard Certificate of Documentation whose hailing port is in ${esc(name)}, as of August 2026. Documentation is required for commercial vessels of 5+ net tons and optional for recreational boats of that size, so small state-registered boats are not included. Names are compared exactly as documented, uppercased.</p>
 `;
